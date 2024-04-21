@@ -88,6 +88,19 @@ const updateUser = async (req, res) => {
         if (!user) {
             throw error("User not found", 400)
         }
+
+
+
+        if (email && email !== user.email) {
+            const isUserAlreadyRegistered = await User.findOne({ email });
+            if (isUserAlreadyRegistered) {
+                throw error("User already registered", 400)
+            }
+        }
+
+
+
+
         const updatedUser = await User.updateOne({ _id: id }, {
             $set: {
                 firstname,
@@ -95,15 +108,24 @@ const updateUser = async (req, res) => {
                 email,
                 image
             }
+        }, {
+            runValidators: true
         });
 
-        const newUser = await userServices.findUserByKey("_id", id)
-        const { password, ...data } = newUser._doc;
+        if (updatedUser.modifiedCount > 0) {
+            const newUser = await userServices.findUserByKey("_id", id)
+            const { password, ...data } = newUser._doc;
 
-        return res.status(200).json({
-            message: 'User updated successfully',
-            value: data
-        });
+            return res.status(200).json({
+                message: 'User updated successfully',
+                value: data
+            });
+        } else {
+            return res.status(500).json({
+                message: 'User not updated! Maybe you did not make any changes!',
+            });
+
+        }
     }
     catch (err) {
         return res.status(err.status || 500).json({
