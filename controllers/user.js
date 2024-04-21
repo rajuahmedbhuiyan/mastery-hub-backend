@@ -84,12 +84,13 @@ const updateUser = async (req, res) => {
     const { id } = req.params;
     const { firstname, lastname, email, image, } = req.body;
     try {
-        const user = await userServices.findUserByKey("_id", id)
+        const user = await userServices.findUserByKey("_id", id);
+
+
+
         if (!user) {
             throw error("User not found", 400)
         }
-
-
 
         if (email && email !== user.email) {
             const isUserAlreadyRegistered = await User.findOne({ email });
