@@ -2,12 +2,20 @@ const User = require('../models/User');
 const userServices = require('../services/user');
 const bcrypt = require('bcrypt');
 const error = require('../utils/error');
+const { handleFormatUserResponse } = require('../utils/users');
+const { handleSendResponse } = require('../utils/response');
 
 
 const getUsers = async (req, res,) => {
     try {
         const users = await userServices.getUsers();
-        return res.status(200).json(users);
+        const data = users.map(user => handleFormatUserResponse(user._doc))
+        return handleSendResponse({
+            res,
+            statusCode: 200,
+            message: 'All users fetched successfully',
+            data
+        })
     } catch (err) {
         return res.status(500).json({ message: err.message });
     }
@@ -21,7 +29,6 @@ const createUser = async (req, res) => {
     try {
 
 
-
         const newUser = await userServices.createUsers({
             firstname,
             lastname,
@@ -32,11 +39,15 @@ const createUser = async (req, res) => {
             roles,
         })
 
+        const data = handleFormatUserResponse(newUser._doc)
 
+        return handleSendResponse({
+            res,
+            statusCode: 201,
+            message: 'User created successfully',
+            data
+        })
 
-
-
-        return res.status(201).json(newUser);
     } catch (err) {
         return res.status(err.status || 500).json({ message: err.message });
     }
@@ -51,8 +62,13 @@ const getSingleUser = async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
-        const { password, ...data } = user._doc;
-        return res.status(200).json(data);
+        const data = handleFormatUserResponse(user._doc) 
+        return handleSendResponse({
+            res,
+            statusCode: 200,
+            message: `User with id ${id} found`,
+            data
+        })
     }
     catch (err) {
         return res.status(err.status || 500).json({
@@ -68,8 +84,12 @@ const deleteUser = async (req, res) => {
         if (!user) {
             throw error("User not found", 400)
         }
-        await User.deleteOne({ _id: id });
-        return res.status(200).json({ message: 'User deleted successfully' });
+        await User.deleteOne({ _id: id }); 
+        return handleSendResponse({
+            res,
+            statusCode: 200,
+            message: 'User deleted successfully',
+        })
     }
     catch (err) {
         return res.status(err.status || 500).json({
@@ -115,12 +135,14 @@ const updateUser = async (req, res) => {
 
         if (updatedUser.modifiedCount > 0) {
             const newUser = await userServices.findUserByKey("_id", id)
-            const { password, ...data } = newUser._doc;
+            handleFormatUserResponse(newUser._doc)
 
-            return res.status(200).json({
+            return handleSendResponse({
+                res,
+                statusCode: 200,
                 message: 'User updated successfully',
-                value: data
-            });
+                data: newUser
+            })
         } else {
             return res.status(500).json({
                 message: 'User not updated! Maybe you did not make any changes!',

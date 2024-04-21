@@ -1,7 +1,8 @@
-const bcrypt = require('bcrypt');
-const jwt = require("jsonwebtoken");
+const bcrypt = require('bcrypt'); 
 const User = require("../models/User");
 const error = require("../utils/error");
+const { handleFormatUserResponse } = require("../utils/users");
+const { handleGenerateJwtToken } = require('../utils/auth');
 
 
 
@@ -20,13 +21,10 @@ const loginUser = async ({ email, password }) => {
         throw error("Invalid password", 400)
     }
 
-    const { password: p, ...userInfo } = user._doc;
+    const userInfo = handleFormatUserResponse(user._doc); 
+    const token =  handleGenerateJwtToken(userInfo);
 
-    const token = jwt.sign({
-        ...userInfo
-    }, process.env.JWT_SECRET, {
-        expiresIn: '24h'
-    });
+
     return {
         ...userInfo,
         token
