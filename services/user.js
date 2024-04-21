@@ -46,7 +46,18 @@ const createUsers = async ({
 }
 
 
+const findUserByKey = (key, value) => {
+    if (key === "_id") {
+        return User.findById(value);
+    }
+
+    return User.findOne({ [key]: value });
+}
+
+
+
 module.exports = {
     getUsers,
-    createUsers
+    createUsers,
+    findUserByKey
 }

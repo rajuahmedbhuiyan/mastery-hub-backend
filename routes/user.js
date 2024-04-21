@@ -16,4 +16,12 @@ router.post('/', userController.createUser);
 
 router.get('/:id', userController.getSingleUser);
 
+// this is the route for deleteting a user 
+
+router.delete('/:id', userController.deleteUser);
+
+// this is the route for updating a user
+
+router.put('/:id', userController.updateUser);
+
 module.exports = router;

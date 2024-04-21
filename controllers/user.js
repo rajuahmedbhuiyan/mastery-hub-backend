@@ -17,9 +17,9 @@ const getUsers = async (req, res,) => {
 const createUser = async (req, res) => {
     const { firstname, lastname, email, password, roles, image, status, } = req.body;
 
-  
+
     try {
-       
+
 
 
         const newUser = await userServices.createUsers({
@@ -47,7 +47,7 @@ const createUser = async (req, res) => {
 const getSingleUser = async (req, res) => {
     const { id } = req.params;
     try {
-        const user = await User.findById(id);
+        const user = await userServices.findUserByKey("_id", id)
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
@@ -55,7 +55,61 @@ const getSingleUser = async (req, res) => {
         return res.status(200).json(data);
     }
     catch (err) {
-        return res.status(500).json({ message: err.message });
+        return res.status(err.status || 500).json({
+            message: err.message,
+            status: err.status
+        });
+    }
+}
+const deleteUser = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const user = await userServices.findUserByKey("_id", id)
+        if (!user) {
+            throw error("User not found", 400)
+        }
+        await User.deleteOne({ _id: id });
+        return res.status(200).json({ message: 'User deleted successfully' });
+    }
+    catch (err) {
+        return res.status(err.status || 500).json({
+            message: err.message,
+            status: err.status
+        });
+    }
+}
+
+
+const updateUser = async (req, res) => {
+    const { id } = req.params;
+    const { firstname, lastname, email, image, } = req.body;
+    try {
+        const user = await userServices.findUserByKey("_id", id)
+        if (!user) {
+            throw error("User not found", 400)
+        }
+        const updatedUser = await User.updateOne({ _id: id }, {
+            $set: {
+                firstname,
+                lastname,
+                email,
+                image
+            }
+        });
+
+        const newUser = await userServices.findUserByKey("_id", id)
+        const { password, ...data } = newUser._doc;
+
+        return res.status(200).json({
+            message: 'User updated successfully',
+            value: data
+        });
+    }
+    catch (err) {
+        return res.status(err.status || 500).json({
+            message: err.message,
+            status: err.status
+        });
     }
 }
 
@@ -65,5 +119,7 @@ const getSingleUser = async (req, res) => {
 module.exports = {
     getUsers,
     createUser,
-    getSingleUser
+    getSingleUser,
+    deleteUser,
+    updateUser
 }
