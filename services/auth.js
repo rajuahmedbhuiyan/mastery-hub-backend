@@ -18,7 +18,7 @@ const loginUser = async ({ email, password }) => {
     }
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-        throw error("Invalid password", 400)
+        throw error("Wrong password", 401)
     }
 
     const userInfo = handleFormatUserResponse(user._doc); 
